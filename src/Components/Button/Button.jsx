@@ -1,5 +1,15 @@
 import { Button } from './Button.styled';
+import React, { Component } from 'react';
 
-export default function button() {
-  return <Button type="button">Load more</Button>;
+export default class button extends Component {
+  onBtnClick = () => {
+    this.props.onBtnClick();
+  };
+  render() {
+    return (
+      <Button type="button" onClick={this.onBtnClick}>
+        Load more
+      </Button>
+    );
+  }
 }

@@ -3,28 +3,40 @@ import axios from 'axios';
 import { ImageGallery } from './ImageGallery.styled';
 import ImageGalleryItem from '../ImageGalleryItem/ImageGalleryItem';
 
-const KEY = '32075942-33ac7ec23728def8e99295683';
-const perPage = 12;
-const page = 1;
-
 export default class imageGallery extends Component {
   state = {
     imageList: [],
   };
+  //при изменении поиска очизать массив
   componentDidUpdate(prevProps) {
-    if (prevProps.searchQuery !== this.props.searchQuery) {
+    const KEY = '32075942-33ac7ec23728def8e99295683';
+    const page = this.props.onPageChange;
+    const perPage = 12;
+    if (
+      prevProps.searchQuery !== this.props.searchQuery ||
+      prevProps.onPageChange !== this.props.onPageChange
+    ) {
       const URL = `https://pixabay.com/api/?q=${this.props.searchQuery}&page=${page}&key=${KEY}&image_type=photo&orientation=horizontal&per_page=${perPage}`;
-
       axios
         .get(URL)
         .then(response => {
-          this.setState({ imageList: response.data.hits });
+          this.setState(prevState => {
+            return {
+              imageList: [].concat(prevState.imageList, response.data.hits),
+            };
+          });
+
+          //---вынести в отдельный метод
+          if (response.data.hits.length >= 12) {
+            this.props.onButtonRender(true);
+          } else {
+            this.props.onButtonRender(false);
+          }
+          //---
         })
         .catch(function (error) {
           console.log(error);
         });
-      // .finally(function () {
-      // });
     }
   }
 
@@ -41,18 +53,7 @@ export default class imageGallery extends Component {
             />
           );
         })}
-        {/* <ImageGalleryItem searchResult={this.state.imageList} /> */}
       </ImageGallery>
     );
   }
 }
-
-// {this.state.imageList.map(item => {
-//   return (
-//     <li key={item.id}>
-//       <a>
-//         <img src={item.webformatURL} />
-//       </a>
-//     </li>
-//   );
-// })}
