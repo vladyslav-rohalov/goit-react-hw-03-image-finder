@@ -12,3 +12,13 @@ export const ImageGallery = styled.ul`
   margin-left: auto;
   margin-right: auto;
 `;
+
+export const SpinnerDiv = styled.div`
+  width: 80px;
+  height: 80px;
+  margin: 0 auto;
+`;
+
+export const EmptyResponse = styled.h1`
+  text-align: center;
+`;
