@@ -19,6 +19,7 @@ export default class App extends Component {
       this.setState({ button: true });
     } else this.setState({ button: false });
   };
+
   handleChangePage = () => {
     this.setState(prevState => {
       return { page: prevState.page + 1 };
@@ -50,6 +51,10 @@ export default class App extends Component {
     this.setState({ modal: false });
   };
 
+  handleResetPage = () => {
+    this.setState({ page: 1 });
+  };
+
   render() {
     return (
       <AppStyle
@@ -63,7 +68,7 @@ export default class App extends Component {
           onButtonRender={this.handleButtonRender}
           onOpenModal={this.handleModalRender}
           onPageChange={this.state.page}
-          onUpdateState={this.handleImageUrl}
+          onResetPage={this.handleResetPage}
         />
         {this.state.modal && (
           <OpenModal

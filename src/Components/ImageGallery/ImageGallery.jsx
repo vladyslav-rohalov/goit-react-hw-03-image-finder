@@ -28,42 +28,50 @@ export default class imageGallery extends Component {
     }
   }
 
-  onEmptyRsponse(response) {
+  onEmptyResponse(response) {
     response.data.hits.length === 0
       ? this.setState({ emptyResponse: true })
       : this.setState({ emptyResponse: false });
   }
-  componentDidUpdate(prevProps) {
+
+  onSearchRequest(prevProps) {
+    this.spinnerOn();
+    if (prevProps.searchQuery !== this.props.searchQuery) {
+      this.props.onResetPage(true);
+    }
     const KEY = '32075942-33ac7ec23728def8e99295683';
-    const page = this.props.onPageChange;
     const perPage = 12;
+    const page = this.props.onPageChange;
+    const URL = `https://pixabay.com/api/?q=${this.props.searchQuery}&page=${page}&key=${KEY}&image_type=photo&orientation=horizontal&per_page=${perPage}`;
+    axios
+      .get(URL)
+      .then(response => {
+        this.onEmptyResponse(response);
+        if (response.status === 200) {
+          setTimeout(() => this.spinnerOff(), 500);
+        }
+        this.setState(prevState => {
+          if (prevProps.searchQuery !== this.props.searchQuery) {
+            return { imageList: response.data.hits };
+          } else {
+            return {
+              imageList: [].concat(prevState.imageList, response.data.hits),
+            };
+          }
+        });
+        this.onCheckResponse(response);
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+  }
+
+  componentDidUpdate(prevProps) {
     if (
       prevProps.searchQuery !== this.props.searchQuery ||
       prevProps.onPageChange !== this.props.onPageChange
     ) {
-      this.spinnerOn();
-      const URL = `https://pixabay.com/api/?q=${this.props.searchQuery}&page=${page}&key=${KEY}&image_type=photo&orientation=horizontal&per_page=${perPage}`;
-      axios
-        .get(URL)
-        .then(response => {
-          this.onEmptyRsponse(response);
-          if (response.status === 200) {
-            setTimeout(() => this.spinnerOff(), 500);
-          }
-          this.setState(prevState => {
-            if (prevProps.searchQuery !== this.props.searchQuery) {
-              return { imageList: response.data.hits };
-            } else {
-              return {
-                imageList: [].concat(prevState.imageList, response.data.hits),
-              };
-            }
-          });
-          this.onCheckResponse(response);
-        })
-        .catch(function (error) {
-          console.log(error);
-        });
+      this.onSearchRequest(prevProps);
     }
   }
 
