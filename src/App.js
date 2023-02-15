@@ -12,6 +12,7 @@ export default class App extends Component {
     imageList: [],
     isLoading: false,
     emptyResponse: false,
+    totalHits: 0,
   };
 
   componentDidUpdate(prevProps, prevState) {
@@ -44,6 +45,7 @@ export default class App extends Component {
         this.setState(prevState => {
           return {
             imageList: [].concat(prevState.imageList, response.data.hits),
+            totalHits: response.data.totalHits,
           };
         });
       })
@@ -72,7 +74,7 @@ export default class App extends Component {
 
   // === SearchForm ===
   handleSearchFormSubmit = searchQuery => {
-    this.setState({ query: searchQuery, imageList: [], page: 1 });
+    this.setState({ query: searchQuery, imageList: [], page: 1, totalHits: 0 });
   };
 
   // === Page increment ===
@@ -123,9 +125,10 @@ export default class App extends Component {
             onBtnCloseModal={this.handleOnBtnCloseModal}
           />
         )}
-        {this.state.imageList.length > 0 && (
-          <Button onBtnClick={this.handleChangePage} />
-        )}
+        {this.state.imageList.length > 0 &&
+          this.state.imageList.length < this.state.totalHits && (
+            <Button onBtnClick={this.handleChangePage} />
+          )}
       </AppStyle>
     );
   }
