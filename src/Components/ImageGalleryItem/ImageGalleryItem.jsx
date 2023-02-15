@@ -6,10 +6,9 @@ export default function ImageGalleryItem({
   largeImageURL,
   webformatURL,
   tags,
-  OnImageClick,
 }) {
   return (
-    <GalleryItem key={id} onClick={OnImageClick}>
+    <GalleryItem key={id}>
       <TagA src={largeImageURL}>
         <GalleryItemImage src={webformatURL} alt={tags} />
       </TagA>

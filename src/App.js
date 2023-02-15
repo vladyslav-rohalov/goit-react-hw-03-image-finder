@@ -1,45 +1,96 @@
 import React, { Component } from 'react';
 import { AppStyle } from './App.styled';
 import { Searchbar, ImageGallery, OpenModal, Button } from './Components';
+import axios from 'axios';
 
 export default class App extends Component {
   state = {
     query: '',
-    button: false,
     modal: false,
     page: 1,
     largeImageUrl: '',
+    imageList: [],
+    isLoading: false,
+    emptyResponse: false,
   };
 
+  componentDidUpdate(prevProps, prevState) {
+    if (
+      prevState.query !== this.state.query ||
+      prevState.page !== this.state.page
+    ) {
+      this.onSearchRequest();
+    }
+  }
+
+  // ===query request method===
+  onSearchRequest() {
+    this.spinnerOn();
+
+    const KEY = '32075942-33ac7ec23728def8e99295683';
+    const perPage = 12;
+    const { page, query } = this.state;
+    const URL = `https://pixabay.com/api/?q=${query}&page=${page}&key=${KEY}&image_type=photo&orientation=horizontal&per_page=${perPage}`;
+
+    axios
+      .get(URL)
+      .then(response => {
+        this.onEmptyResponse(response);
+
+        if (response.status === 200) {
+          setTimeout(() => this.spinnerOff(), 500);
+        }
+
+        this.setState(prevState => {
+          return {
+            imageList: [].concat(prevState.imageList, response.data.hits),
+          };
+        });
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+  }
+
+  // ===Spinner on/off===
+
+  spinnerOn() {
+    this.setState({ isLoading: true });
+  }
+
+  spinnerOff() {
+    this.setState({ isLoading: false });
+  }
+
+  // ===check response, if response empty paste plug===
+
+  onEmptyResponse(response) {
+    response.data.hits.length === 0
+      ? this.setState({ emptyResponse: true })
+      : this.setState({ emptyResponse: false });
+  }
+
+  // === SearchForm ===
   handleSearchFormSubmit = searchQuery => {
-    this.setState({ query: searchQuery });
-  };
-  handleButtonRender = response => {
-    if (response) {
-      this.setState({ button: true });
-    } else this.setState({ button: false });
+    this.setState({ query: searchQuery, imageList: [], page: 1 });
   };
 
+  // === Page increment ===
   handleChangePage = () => {
     this.setState(prevState => {
       return { page: prevState.page + 1 };
     });
   };
 
-  handleModalRender = response => {
-    if (response) {
-      this.setState({ modal: true });
-    } else this.setState({ modal: false });
+  // === Modal ====
+  handleModalOpen = event => {
+    const smallImageSrc = event.target.currentSrc;
+    const chosenImage = this.state.imageList.find(
+      item => item.webformatURL === smallImageSrc
+    );
+    this.setState({ largeImageUrl: chosenImage.largeImageURL });
+    this.setState({ modal: true });
   };
-
-  handleImageUrl = ImageURL => {
-    this.setState({ largeImageUrl: ImageURL });
-  };
-
-  componentDidUpdate(_, prevState) {
-    if (prevState.modal !== this.state.modal) {
-    }
-  }
 
   handleCloseModal = e => {
     if (e.target.tagName === 'DIV' || e.target.code === 'Escape') {
@@ -51,10 +102,7 @@ export default class App extends Component {
     this.setState({ modal: false });
   };
 
-  handleResetPage = () => {
-    this.setState({ page: 1 });
-  };
-
+  //===Render===
   render() {
     return (
       <AppStyle
@@ -64,11 +112,10 @@ export default class App extends Component {
       >
         <Searchbar onFormSubmit={this.handleSearchFormSubmit} />
         <ImageGallery
-          searchQuery={this.state.query}
-          onButtonRender={this.handleButtonRender}
-          onOpenModal={this.handleModalRender}
-          onPageChange={this.state.page}
-          onResetPage={this.handleResetPage}
+          response={this.state.imageList}
+          isLoading={this.state.isLoading}
+          emptyResponse={this.state.emptyResponse}
+          onImageClick={this.handleModalOpen}
         />
         {this.state.modal && (
           <OpenModal
@@ -76,7 +123,9 @@ export default class App extends Component {
             onBtnCloseModal={this.handleOnBtnCloseModal}
           />
         )}
-        {this.state.button && <Button onBtnClick={this.handleChangePage} />}
+        {this.state.imageList.length > 0 && (
+          <Button onBtnClick={this.handleChangePage} />
+        )}
       </AppStyle>
     );
   }
